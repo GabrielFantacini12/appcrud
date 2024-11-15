@@ -2,6 +2,14 @@
 include 'usuarios_controller.php';
 include 'header.php';
 
+session_start();
+
+// Verifica se o usuário está registrado na sessão (logado)
+if (!isset($_SESSION['email'])) {
+    header("Location: index.php");
+    exit();
+}
+
 //Pega todos os usuários para preencher os dados da tabela
 $users = getUsers();
 

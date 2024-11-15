@@ -1,6 +1,11 @@
 <footer class="bg-dark text-white d-flex align-items-center" style="height: 1cm;">
         <div class="container text-center">
-            <p class="mb-0">&copy; <?php echo date("Y"); ?> Sistema teste. Todos os direitos reservados.</p>
+            <p class="mb-0">
+            &copy; <?php echo date("Y"); ?> Sistema E-Comerce. Todos os direitos reservados.
+            <?php if (isset($_SESSION['nome'])): ?>
+                | Usuário Logado: <strong><?php echo htmlspecialchars($_SESSION['nome']); ?></strong>
+                <?php endif; ?>
+            </p>   
         </div>
     </footer>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
