@@ -1,70 +1,66 @@
 <?php
 include 'db.php';
 
-// Função para salvar produto
-function saveProduct($nome, $descricao, $marca, $modelo, $valorunitario, $categoria, $url_img, $ativo) {
-global $conn;
-// Verificar se a imagem foi enviada
-$stmt = $conn->prepare("INSERT INTO produtos (nome, descricao, marca, modelo, valorunitario, categoria, url_img, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssssi", $nome, $descricao, $marca, $modelo, $valorunitario, $categoria, $url_img, $ativo);
-return $stmt->execute();
+// Função para salvar o produto no banco de dados
+function saveProduct($nome, $descricao, $modelo, $valorunitario, $categoria, $marca, $urlImg, $ativo) {
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO produtos 
+    (nome, descricao, marca, modelo, valorunitario, categoria, ativo, url_img)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $nome, $descricao, $marca, $modelo, $valorunitario, $categoria, $ativo, $urlImg);
+    return $stmt->execute();
 }
 
-
-// Função para obter todos os produtos
+// Função para buscar todos os produtos 
 function getProducts() {
-global $conn;
-$result = $conn->query("SELECT * FROM produtos");
-return $result->fetch_all(MYSQLI_ASSOC);
+    global $conn;
+    $result = $conn->query("SELECT * FROM produtos");
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
-
 // Função para obter um produto específico
 function getProduct($id) {
-global $conn;
-$stmt = $conn->prepare("SELECT * FROM produtos WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-return $stmt->get_result()->fetch_assoc();
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM produtos WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
 }
 
 // Função para atualizar um produto
-function updateProduct($id, $nome, $descricao, $marca, $modelo, $valorunitario, $categoria, $url_img, $ativo) {
-global $conn;
-$stmt = $conn->prepare("UPDATE produtos SET nome = ?, descricao = ?, marca = ?, modelo = ?, valorunitario = ?, categoria = ?, url_img = ?, ativo = ? WHERE id = ?");
-$stmt->bind_param("ssssssssi", $nome, $descricao, $marca, $modelo, $valorunitario, $categoria, $url_img, $ativo, $id);
-return $stmt->execute();
+function updateProduct($id,$nome, $descricao, $modelo, $preco, $categoria, $marca, $urlImg, $ativo) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE produtos
+    SET nome = ?, descricao = ?, marca = ?, modelo = ?, valorunitario = ?, categoria = ?, ativo = ?, url_img = ?
+    WHERE id = ?");
+    
+    // Aqui estamos adicionando a variável $id ao bind_param
+    $stmt->bind_param("ssssssssi", $nome, $descricao, $marca, $modelo, $preco, $categoria, $ativo, $urlImg, $id);
+    return $stmt->execute();
 }
 
 // Função para excluir um produto
 function deleteProduct($id) {
-global $conn;
-$stmt = $conn->prepare("DELETE FROM produtos WHERE id = ?");
-$stmt->bind_param("i", $id);
-return $stmt->execute();
+    global $conn;
+    $stmt = $conn->prepare("DELETE FROM produtos WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
 }
 
-// Processamento do formulário
+// Processar o formulário de envio
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-// Verificar se o campo de imagem foi enviado
-$url_img = ''; // Valor padrão caso não haja imagem
-if (isset($_FILES['url_img']) && $_FILES['url_img']['error'] == 0) {
-// Processar o upload da imagem
-$url_img = 'uploads/' . $_FILES['url_img']['name']; // Caminho do arquivo para salvar na pasta 'uploads'
-move_uploaded_file($_FILES['url_img']['tmp_name'], $url_img);
-} elseif (isset($_POST['url_img'])) {
-// Se o campo de imagem foi enviado como texto (no caso de edição)
-$url_img = $_POST['url_img'];
+    $ativo = isset($_POST['ativo']) ? 1 : 0;
+    if (isset($_POST['save'])) {
+        saveProduct($_POST['nome'], $_POST['descricao'], $_POST['modelo'], floatval($_POST['valorunitario']), $_POST['categoria'], $_POST['marca'], $_POST['url_img'], $ativo);
+    } elseif (isset($_POST['update'])) {
+        updateProduct(intval($_POST['id']), $_POST['nome'], $_POST['descricao'], $_POST['modelo'], floatval($_POST['valorunitario']), $_POST['categoria'], $_POST['marca'], $_POST['url_img'], $ativo);
+    }
 }
 
-if (isset($_POST['save'])) {
-saveProduct($_POST['nome'], $_POST['descricao'], $_POST['marca'], $_POST['modelo'], $_POST['valorunitario'], $_POST['categoria'], $url_img, isset($_POST['ativo']) ? 1 : 0);
-} elseif (isset($_POST['update'])) {
-updateProduct($_POST['id'], $_POST['nome'], $_POST['descricao'], $_POST['marca'], $_POST['modelo'], $_POST['valorunitario'], $_POST['categoria'], $url_img, isset($_POST['ativo']) ? 1 : 0);
-}
-}
-
-// Processamento da exclusão
+// Excluir produto
 if (isset($_GET['delete'])) {
-deleteProduct($_GET['delete']);
+    $id = $_GET['delete'];
+    deleteProduct($id);
+    header("Location: principal.php");
+    exit();
 }
 ?>
