@@ -1,7 +1,13 @@
 <?php
+session_start();
+if (!isset($_SESSION['email'])) {
+    header("Location: index.php");
+    exit();
+}
+
 include 'db.php';
 include 'shopcart_controller.php';
-//session_start();
+//
 
 // Armazena informações do usuário
 $nome = $_SESSION['nome'];
@@ -18,7 +24,7 @@ function salvarPedido($carrinho, $total) {
     global $conn;
     
     // Pega o ID do usuário que está na sessão
-    $id_usuario = null;  // Pegando o ID do usuário que está na sessão
+    $id_usuario = $_SESSION['id'];  // Pegando o ID do usuário que está na sessão
     $data_pedido = date('Y-m-d H:i:s');
 
     // Tenta inserir o pedido no banco
